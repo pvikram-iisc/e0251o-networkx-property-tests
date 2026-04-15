@@ -1,7 +1,8 @@
 """
 E0 251o (2026) Project: Property-Based Testing for NetworkX
 
-Team members: P. Vikram (solo)
+Team members: Vikram Panigrahi(solo)
+SR no: 13-19-01-19-52-23-1-23777
 Algorithms tested:
 - Shortest paths: Dijkstra (single-source)
 - Minimum spanning tree (MST)
@@ -11,12 +12,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import combinations
+import os
 from typing import Iterable, Sequence, Tuple
 
 import networkx as nx
 import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
+
+# Global scaling factor for Hypothesis effort.
+# Example (PowerShell): $env:PBT_SCALE=10; python -m pytest -q networkx_property_tests.py
+_PBT_SCALE_RAW = int(os.getenv("PBT_SCALE", "1"))
+PBT_SCALE = max(1, min(_PBT_SCALE_RAW, 50))
 
 
 @dataclass(frozen=True)
@@ -177,7 +184,7 @@ def small_sparse_connected_weighted_graph(
 
 
 @given(st.booleans())
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50 * PBT_SCALE, deadline=None)
 def test_dijkstra_empty_graph_raises_node_not_found(directed: bool):
     """
     Property: Running Dijkstra with a source node not present in the graph raises `NodeNotFound`.
@@ -201,7 +208,7 @@ def test_dijkstra_empty_graph_raises_node_not_found(directed: bool):
 
 
 @given(weighted_graph_case(directed=True, connected=False))
-@settings(max_examples=200, deadline=None)
+@settings(max_examples=200 * PBT_SCALE, deadline=None)
 def test_dijkstra_source_distance_is_zero_for_existing_source(case: WeightedGraphCase):
     """
     Property: For a non-empty graph, the shortest-path distance from the source to itself is 0.
@@ -226,7 +233,7 @@ def test_dijkstra_source_distance_is_zero_for_existing_source(case: WeightedGrap
 
 
 @given(any_weighted_graph_case(connected=False))
-@settings(max_examples=150, deadline=None)
+@settings(max_examples=150 * PBT_SCALE, deadline=None)
 def test_dijkstra_edge_relaxation_upper_bounds_hold(case: WeightedGraphCase):
     """
     Property: Dijkstra distances satisfy the edge-relaxation inequality:
@@ -260,7 +267,7 @@ def test_dijkstra_edge_relaxation_upper_bounds_hold(case: WeightedGraphCase):
 
 
 @given(any_weighted_graph_case(connected=False))
-@settings(max_examples=120, deadline=None)
+@settings(max_examples=120 * PBT_SCALE, deadline=None)
 def test_dijkstra_paths_match_reported_distances(case: WeightedGraphCase):
     """
     Property: The paths returned by Dijkstra are valid and their total weights match the reported distances.
@@ -297,7 +304,7 @@ def test_dijkstra_paths_match_reported_distances(case: WeightedGraphCase):
     any_weighted_graph_case(connected=False),
     st.integers(min_value=1, max_value=9),
 )
-@settings(max_examples=100, deadline=None)
+@settings(max_examples=100 * PBT_SCALE, deadline=None)
 def test_dijkstra_weight_scaling_scales_distances(case: WeightedGraphCase, k: int):
     """
     Metamorphic property: Multiplying all edge weights by a positive factor k scales all shortest-path
@@ -328,7 +335,7 @@ def test_dijkstra_weight_scaling_scales_distances(case: WeightedGraphCase, k: in
 
 
 @given(any_weighted_graph_case(connected=False, force_unit_weights=True))
-@settings(max_examples=120, deadline=None)
+@settings(max_examples=120 * PBT_SCALE, deadline=None)
 def test_unit_weight_dijkstra_matches_unweighted_shortest_paths(case: WeightedGraphCase):
     """
     Metamorphic/consistency property: When every edge weight is 1, Dijkstra distances equal
@@ -355,7 +362,7 @@ def test_unit_weight_dijkstra_matches_unweighted_shortest_paths(case: WeightedGr
 
 
 @given(any_weighted_graph_case(connected=False, max_nodes=12, min_weight=0, max_weight=25))
-@settings(max_examples=120, deadline=None)
+@settings(max_examples=120 * PBT_SCALE, deadline=None)
 def test_dijkstra_matches_bellman_ford_on_nonnegative_weights(case: WeightedGraphCase):
     """
     Oracle property: On graphs with non-negative weights, Dijkstra and Bellman-Ford must agree.
@@ -391,7 +398,7 @@ def test_dijkstra_matches_bellman_ford_on_nonnegative_weights(case: WeightedGrap
 
 
 @given(weighted_graph_case(directed=False, connected=True, min_nodes=1, max_nodes=16, min_weight=0, max_weight=30))
-@settings(max_examples=120, deadline=None)
+@settings(max_examples=120 * PBT_SCALE, deadline=None)
 def test_mst_is_tree_and_spans_all_nodes(case: WeightedGraphCase):
     """
     Property: For a connected undirected graph G with n >= 1 nodes, the MST returned by NetworkX
@@ -420,7 +427,7 @@ def test_mst_is_tree_and_spans_all_nodes(case: WeightedGraphCase):
 
 
 @given(weighted_graph_case(directed=False, connected=True, min_nodes=1, max_nodes=18, min_weight=0, max_weight=30))
-@settings(max_examples=120, deadline=None)
+@settings(max_examples=120 * PBT_SCALE, deadline=None)
 def test_mst_edge_count_is_n_minus_1(case: WeightedGraphCase):
     """
     Property: A spanning tree on n nodes has exactly n-1 edges; therefore an MST must have n-1 edges.
@@ -449,7 +456,7 @@ def _mst_total_weight(T: nx.Graph) -> int:
 
 
 @given(weighted_graph_case(directed=False, connected=True, min_nodes=2, max_nodes=16, min_weight=0, max_weight=40))
-@settings(max_examples=90, deadline=None)
+@settings(max_examples=90 * PBT_SCALE, deadline=None)
 def test_mst_cycle_property_holds_for_non_tree_edges(case: WeightedGraphCase):
     """
     Property (cycle / exchange characterization): Let T be an MST of G. For any non-tree edge e=(u,v),
@@ -493,7 +500,7 @@ def test_mst_cycle_property_holds_for_non_tree_edges(case: WeightedGraphCase):
     weighted_graph_case(directed=False, connected=True, min_nodes=1, max_nodes=16, min_weight=0, max_weight=40),
     st.integers(min_value=1, max_value=9),
 )
-@settings(max_examples=80, deadline=None)
+@settings(max_examples=80 * PBT_SCALE, deadline=None)
 def test_mst_total_weight_scales_with_weight_scaling(case: WeightedGraphCase, k: int):
     """
     Metamorphic property: If all edge weights are multiplied by a positive factor k, the total
@@ -525,7 +532,7 @@ def test_mst_total_weight_scales_with_weight_scaling(case: WeightedGraphCase, k:
 
 
 @given(small_sparse_connected_weighted_graph())
-@settings(max_examples=120, deadline=None)
+@settings(max_examples=120 * PBT_SCALE, deadline=None)
 def test_mst_is_optimal_by_bruteforce_on_small_sparse_graphs(G: nx.Graph):
     """
     Oracle property (brute-force optimality): For small connected graphs, the MST returned by NetworkX

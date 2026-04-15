@@ -22,6 +22,25 @@ python -m pip install -r requirements.txt
 python -m pytest -q networkx_property_tests.py
 ```
 
+### Configure how many generated tests run
+This test suite uses Hypothesis, which generates many random graphs per test.
+
+You can scale the number of generated examples per test via the `PBT_SCALE` environment variable:
+
+- Default: `PBT_SCALE=1`
+- Range: `1` to `50` (values outside are clamped)
+
+Examples:
+
+```powershell
+$env:PBT_SCALE=10
+python -m pytest -q networkx_property_tests.py
+```
+
+```bash
+PBT_SCALE=10 python -m pytest -q networkx_property_tests.py
+```
+
 ### Files
 - `networkx_property_tests.py`: the **single required Python file** containing all property-based tests and helpers.
 
