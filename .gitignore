@@ -7,3 +7,6 @@ __pycache__/
 venv/
 .env
 
+# Keep assignment PDF local, not in repo
+E0 251o Project.pdf
+
